@@ -5,6 +5,7 @@ package graph
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"yogan.dev/meetmeup/graph/generated"
@@ -40,7 +41,20 @@ var users = []*models.User{
 }
 
 func (r *meetupResolver) User(ctx context.Context, obj *models.Meetup) (*models.User, error) {
-	panic(fmt.Errorf("not implemented"))
+	user := new(models.User)
+
+	for _, u := range users {
+		if u.ID == obj.UserID {
+			user = u
+			break
+		}
+	}
+
+	if user == nil {
+		return nil, errors.New("user with id not found")
+	}
+
+	return user, nil
 }
 
 func (r *mutationResolver) CreateMeetup(ctx context.Context, input model.NewMeetup) (*models.Meetup, error) {
@@ -52,7 +66,15 @@ func (r *queryResolver) Meetups(ctx context.Context) ([]*models.Meetup, error) {
 }
 
 func (r *userResolver) Meetups(ctx context.Context, obj *models.User) ([]*models.Meetup, error) {
-	return nil, nil
+	var resp []*models.Meetup
+
+	for _, meetup := range meetups {
+		if meetup.UserID == obj.ID {
+			resp = append(resp, meetup)
+		}
+	}
+
+	return resp, nil
 }
 
 // Meetup returns generated.MeetupResolver implementation.
